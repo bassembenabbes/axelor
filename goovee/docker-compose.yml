@@ -1,0 +1,60 @@
+services:
+  app:
+    image: axelor/aos-ce:latest
+    depends_on:
+      - postgres
+    environment:
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGUSER=axelor
+      - PGPASSWORD=axelor
+      - PGDATABASE=axelor
+      - JAVA_XMX=4096m
+    ports:
+      - "8080:8080"
+    volumes:
+      - app_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 1800s
+  goovee:
+    image: axelor/goovee-ce:latest
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      - PGHOST=postgres
+      - PGPORT=5432
+      - PGUSER=axelor
+      - PGPASSWORD=axelor
+      - PGDATABASE=axelor
+      - DATA_STORAGE=/data/attachments
+      - MULTI_TENANCY=false
+      - INCLUDE_LANGUAGE=true
+      - GOOVEE_PUBLIC_HOST=http://localhost:3000
+      - GOOVEE_PUBLIC_AOS_URL=http://app:8080
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=tobechanged
+      - BASIC_AUTH_USERNAME=admin
+      - BASIC_AUTH_PASSWORD=admin
+      - MAIL_HOST=sandbox.smtp.mailtrap.io
+      - MAIL_PORT=2525
+      - MAIL_SECURE=false
+      - MAIL_USER=username
+      - MAIL_PASSWORD=password
+      - MAIL_EMAIL=goovee@example.com
+    volumes:
+      - app_data:/data
+    ports:
+      - "3000:3000"
+  postgres:
+    image: "postgres:16"
+    environment:
+      - POSTGRES_USER=axelor
+      - POSTGRES_PASSWORD=axelor
+      - POSTGRES_DB=axelor
+volumes:
+  app_data:
