@@ -1,24 +1,51 @@
+version: "3.9"
+
 services:
-  app:
-    image: axelor/aos-ce:9.0
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: axelor-db
+    restart: always
+    env_file: .env
     environment:
-      - PGHOST=postgres
-      - PGPORT=5432
-      - PGUSER=axelor
-      - PGPASSWORD=axelor
-      - PGDATABASE=axelor
-      - JAVA_XMX=4096m
-    ports:
-      - "8080:8080"
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db-init:/docker-entrypoint-initdb.d
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
-      retries: 3
-      start_period: 1800s
-  postgres:
-    image: "postgres:16"
+      retries: 5
+
+  app:
+    image: axelor/aos-ce:9.0
+    container_name: axelor-app
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file: .env
     environment:
-      - POSTGRES_USER=axelor
-      - POSTGRES_PASSWORD=axelor
-      - POSTGRES_DB=axelor
+      PGHOST: postgres
+      PGPORT: 5432
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      JAVA_XMX: ${JAVA_XMX}
+    ports:
+      - "8080:8080"
+    volumes:
+      - app_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+
+volumes:
+  postgres_data:
+  app_data:

@@ -1,3 +1,7 @@
+--------------
+# 2. Lancer les services
+docker compose up -d
+--------------
 # Axelor Open Suite - Community Edition Docker Image - AOP 8.+
 
 ## Overview
@@ -148,7 +152,7 @@ services:
       - app_data:/data
 
   postgres:
-    image: "postgres:16"
+    image: "postgres:16-alpine"
     environment:
       - POSTGRES_USER=axelor
       - POSTGRES_PASSWORD=axelor
