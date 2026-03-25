@@ -7,6 +7,25 @@ Voir logs Axelor
 docker logs -f axelor-app
 Voir logs PostgreSQL
 docker logs -f axelor-db
+-----
+docker logs -f 8-goovee-1
+--------------
+# Builder l'image (long : ~30-60 min)
+docker compose build --no-cache
+
+# Lancer les services
+docker compose up -d
+
+# Suivre les logs
+docker compose logs -f app
+```
+
+---
+
+**Ce que fait `020-restore-meta.sh`**
+```
+Premier démarrage  →  FIRST_START=true  →  script ignoré ✅
+Redémarrage        →  FIRST_START vide  →  restore meta lancé ✅
 --------------
 # Axelor Open Suite - Community Edition Docker Image - AOP 8.+
 

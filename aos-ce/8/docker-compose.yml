@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
 
   postgres:
@@ -21,7 +19,16 @@ services:
       retries: 5
 
   app:
-    image: axelor/aos-ce:9.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        AOS_VERSION: ${AOS_VERSION:-9.0}
+        WEBAPP_VERSION: ${WEBAPP_VERSION:-9.0}
+        ADDITIONAL_MODULES: ${ADDITIONAL_MODULES:-}
+        UID: 1000
+        GID: 1000
+        TOMCAT_VERSION: ${TOMCAT_VERSION:-10.1.50}
     container_name: axelor-app
     restart: always
     depends_on:
@@ -34,17 +41,28 @@ services:
       PGUSER: ${POSTGRES_USER}
       PGPASSWORD: ${POSTGRES_PASSWORD}
       PGDATABASE: ${POSTGRES_DB}
-      JAVA_XMX: ${JAVA_XMX}
+      JAVA_XMX: ${JAVA_XMX:-4096m}
+      JAVA_XMS: ${JAVA_XMS:-512m}
+      APP_USER: ${APP_USER:-admin}
+      APP_PASS: ${APP_PASS:-admin}
+      APP_MODE: ${APP_MODE:-prod}
+      APP_LANGUAGE: ${APP_LANGUAGE:-fr}
+      APP_DEMO_DATA: ${APP_DEMO_DATA:-false}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+      ENABLE_QUARTZ: ${ENABLE_QUARTZ:-true}
     ports:
       - "8080:8080"
     volumes:
       - app_data:/data
+      # Monter les scripts dans le conteneur
+      - ./docker-entrypoint.sh:/usr/local/bin/docker-entrypoint.sh:ro
+      - ./post-startup.d/020-restore-meta.sh:/usr/local/bin/post-startup.d/020-restore-meta.sh:ro
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:8080/ || exit 1"]
-      interval: 20s
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/ws/public/app/info || exit 1"]
+      interval: 30s
       timeout: 10s
-      retries: 5
-      start_period: 300s
+      retries: 10
+      start_period: 600s
 
 volumes:
   postgres_data:
