@@ -1,6 +1,12 @@
 --------------
 # 2. Lancer les services
 docker compose up -d
+http://localhost:8080/health
+http://localhost:8080/#/ds/menu.admin.app.management/cards
+Voir logs Axelor
+docker logs -f axelor-app
+Voir logs PostgreSQL
+docker logs -f axelor-db
 --------------
 # Axelor Open Suite - Community Edition Docker Image - AOP 8.+
 
